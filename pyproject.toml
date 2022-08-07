@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "polymath-server"
-version = "0.1.0.dev54"
+name = "polymath-server-http"
+version = "0.1.0.dev142"
 description = ""
 authors = ["Your Name <you@example.com>"]
 
@@ -12,10 +12,10 @@ packages = [
 python = ">=3.8, <3.10"
 fastapi = "^0.78.0"
 uvicorn = "^0.17.6"
-polymath-core = {path = "../polymath_core"}
-grpcio = "^1.46.3"
 
 [tool.poetry.dev-dependencies]
+polymath-core = {git = "https://github.com/ospark-org/polymoath-core.git", rev = "main"}
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
