@@ -120,18 +120,7 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
         self.__methods = methods
         self.__include_in_schema = include_in_schema if include_in_schema is not None else True
         self.__tags = tags
-        if response_model is None:
-            sig = inspect.signature(end_point)
-            if sig.return_annotation == inspect.Signature.empty:
-                self.__response_model = None
-            else:
-                # deal with the return annotation become str by __future__.annotations
-                if isinstance(sig.return_annotation, str):
-                    self.__response_model = end_point.__globals__.get(sig.return_annotation)
-                else:
-                    self.__response_model = sig.return_annotation
-        else:
-            self.__response_model = response_model
+        self.__response_model = response_model
         self.__description = description
 
     def routing_path(self) -> str:
@@ -150,7 +139,19 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
         return self.__description
 
     def response_model(self) -> Optional[Type[BaseModel]]:
-        response_model = self.__response_model
+        end_point = self.end_point()
+        if self.__response_model is None:
+            sig = inspect.signature(end_point)
+            if sig.return_annotation == inspect.Signature.empty:
+                response_model = None
+            else:
+                # deal with the return annotation become str by __future__.annotations
+                if isinstance(sig.return_annotation, str):
+                    response_model = end_point.__globals__.get(sig.return_annotation)
+                else:
+                    response_model = sig.return_annotation
+        else:
+            response_model = self.__response_model
         return response_model
 
     def include_in_schema(self) -> bool:
