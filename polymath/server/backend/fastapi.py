@@ -164,10 +164,4 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
             else:
                 return result
         endpoint.__name__ = end_point.__name__
-        # endpoint_return = self.response_model()
-        #
-        # print("😱:", endpoint_return)
-        # if endpoint_return is not None:
-        #     endpoint.__annotations__["return"] = endpoint_return
-        # print("😓:", endpoint.__annotations__)
         return self.get_route(end_point=endpoint, path_prefix=path_prefix)
