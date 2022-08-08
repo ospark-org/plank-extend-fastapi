@@ -125,7 +125,11 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
             if sig.return_annotation == inspect.Signature.empty:
                 self.__response_model = None
             else:
-                self.__response_model = sig.return_annotation
+                # deal with the return annotation become str by __future__.annotations
+                if isinstance(sig.return_annotation, str):
+                    self.__response_model = end_point.__globals__.get(sig.return_annotation)
+                else:
+                    self.__response_model = sig.return_annotation
         else:
             self.__response_model = response_model
         self.__description = description
@@ -160,7 +164,10 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
             else:
                 return result
         endpoint.__name__ = end_point.__name__
-        endpoint_return = self.response_model()
-        if endpoint_return is not None:
-            endpoint.__annotations__["return"] = endpoint_return
+        # endpoint_return = self.response_model()
+        #
+        # print("😱:", endpoint_return)
+        # if endpoint_return is not None:
+        #     endpoint.__annotations__["return"] = endpoint_return
+        # print("😓:", endpoint.__annotations__)
         return self.get_route(end_point=endpoint, path_prefix=path_prefix)
