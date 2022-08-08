@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from typing import Optional, Callable, NoReturn
 from polymath.app import Application
 from polymath.server import Server, BindAddress, ServerDelegate
-from polymath.server.inline import InlineServer
 from polymath.server.backend import Backend
 from polymath.server.backend.fastapi import FastAPIRouteBackend, Routable
 from polymath.support.fastapi.builtin import BuiltinService
@@ -42,7 +41,7 @@ class FastAPIServer(Server):
     def fastapi(self)->FastAPI:
         return self.__fastapi
 
-    def __init__(self, binding: BindAddress, application: Application,
+    def __init__(self, application: Application,
                  build_version: Optional[str]=None,
                  path_prefix: Optional[str]=None,
                  openapi_path: Optional[str] = None,
@@ -51,8 +50,7 @@ class FastAPIServer(Server):
                  swagger_path: Optional[str] = None,
                  delegate: Optional[FastAPIServerDelegate]=None,
                 **fastapi_arguments):
-        super().__init__(binding=binding, application=application, delegate=delegate)
-        self.__inline_server = InlineServer(binding=BindAddress(host="0.0.0.0", port=30), application=application)
+        super().__init__(application=application, delegate=delegate)
         self.__build_version = build_version or application.version
         self.__path_prefix = path_prefix or application.name
         self.__openapi_path = openapi_path or "/swagger/openapi.json"
@@ -89,27 +87,7 @@ class FastAPIServer(Server):
         service = BuiltinService(name="builtin", build_version=self.build_version, app_version=self.application.version,
                        title=title, openapi_path=self.openapi_path, user=self.swagger_secrets_username, password=self.swagger_secrets_password)
         self.add_backends_by_service(service=service)
-        # version_backend = FastAPIRouteBackend(name="version", path="/version",
-        #                                       serving=VersionService(build_version=self.build_version,
-        #                                                              app_version=self.application.version),
-        #                                       methods=["GET"], tags=["default"], response_model=VersionResponseSchema)
-        # self.add_backend(version_backend)
-        #
-        #
-        # swagger_service = SwaggerService(title=title, openapi_path=self.openapi_path, user=self.swagger_secrets_username, password=self.swagger_secrets_password)
-        # swagger_backend = FastAPIRouteBackend(name=title, path=self.swagger_path,
-        #                                       serving=swagger_service,
-        #                                       methods=["GET"], include_in_schema=False)
-        # self.add_backend(swagger_backend)
 
-    def add_backend(self, backend: Backend):
-        super().add_backend(backend=backend)
-        # self.__inline_server.add_backend(backend=backend)
-
-    def listen(self, **app_launch_options):
-        super().listen(**app_launch_options)
-        # handler = lambda : self.application.launch(**app_launch_options)
-        # self.__inline_server.listen(handler=handler)
 
     async def __call__(self, scope, receive, send):
         await self.__fastapi(scope=scope, receive=receive, send=send)
