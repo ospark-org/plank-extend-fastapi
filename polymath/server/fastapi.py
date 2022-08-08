@@ -52,7 +52,7 @@ class FastAPIServer(Server):
                 **fastapi_arguments):
         super().__init__(application=application, delegate=delegate)
         self.__build_version = build_version or application.version
-        self.__path_prefix = path_prefix or application.name
+        self.__path_prefix = path_prefix
         self.__openapi_path = openapi_path or "/swagger/openapi.json"
         self.__swagger_secrets_username = swagger_secrets_username
         self.__swagger_secrets_password = swagger_secrets_password
