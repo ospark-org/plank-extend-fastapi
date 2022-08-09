@@ -36,10 +36,11 @@ class Routable:
         raise NotImplementedError
 
     def get_route(self, end_point:Callable, path_prefix: Optional[str]=None)->APIRoute:
-        path = clearify(self.routing_path())
+        _path = clearify(self.routing_path())
         if path_prefix is not None:
             path_prefix = clearify(path_prefix)
-            path = f"/{path_prefix}/{path}"
+            _path = f"{path_prefix}/{path}"
+        path = f"/{_path}"
 
         name = self.name() or \
                getattr(end_point, "__name__") if hasattr(end_point, "__name__") else path.split("/")[-1]
