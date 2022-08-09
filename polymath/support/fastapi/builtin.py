@@ -3,9 +3,12 @@ from pydantic import BaseModel
 from typing import Dict, Optional, Any
 from fastapi import Depends, HTTPException
 from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from polymath.serving.service import Service
+from polymath.app import Application
 from polymath.decorator.fastapi import routable
+from polymath.support.fastapi.settings import SwaggerSettings
 
 class VersionResponse(BaseModel):
     app_version: str = "0.1.0"
@@ -14,14 +17,11 @@ class VersionResponse(BaseModel):
 
 class BuiltinService(Service):
 
-    def __init__(self, name: str, build_version: str, app_version: str, title: str, openapi_path: str,serving_path: Optional[str]=None, user: Optional[str]=None, password: Optional[str]=None):
+    def __init__(self, name:str, app:Application, swagger_setting: SwaggerSettings, serving_path: Optional[str]=None):
         super().__init__(name=name, serving_path=serving_path)
-        self.__build_version = build_version
-        self.__app_version = app_version
-        self.__title = title
-        self.__openapi_path = openapi_path
-        self.__user = user
-        self.__password = password or ""
+        self.__build_version = app.build_version
+        self.__app_version = app.version
+        self.__swagger_settings = swagger_setting
 
     @routable(path="/version", tags=["default"], methods=["GET"])
     async def version(self) -> VersionResponse:
@@ -33,8 +33,8 @@ class BuiltinService(Service):
     def get_current_username(self, credentials: HTTPBasicCredentials = Depends(HTTPBasic())):
         if self.__user is None:
             return "no secrets"
-        correct_username = secrets.compare_digest(credentials.username, self.__user)
-        correct_password = secrets.compare_digest(credentials.password, self.__password)
+        correct_username = secrets.compare_digest(credentials.username, self.__swagger_settings.secrets_username)
+        correct_password = secrets.compare_digest(credentials.password, self.__swagger_settings.secrets_password)
         if not (correct_username and correct_password):
             raise HTTPException(
                 status_code=401,
@@ -43,9 +43,9 @@ class BuiltinService(Service):
             )
         return credentials.username
 
-    @routable(path="/swagger", tags=["default"], methods=["GET"], include_in_schema=False)
-    async def swagger(self) -> Any:
+    @routable(path="/${server.swagger_path}", tags=["default"], methods=["GET"], include_in_schema=False)
+    async def swagger(self, _: str = Depends(get_current_username)) -> HTMLResponse:
         return get_swagger_ui_html(
-            openapi_url=self.__openapi_path,
-            title=self.__title
+            openapi_url=self.__swagger_settings.openapi_path,
+            title=self.__swagger_settings.title
         )

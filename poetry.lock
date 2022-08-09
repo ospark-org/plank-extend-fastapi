@@ -91,8 +91,16 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "nest-asyncio"
+version = "1.5.5"
+description = "Patch asyncio to allow nested event loops"
+category = "dev"
+optional = false
+python-versions = ">=3.5"
+
+[[package]]
 name = "polymath-core"
-version = "0.1.0.dev54"
+version = "0.1.0.dev155"
 description = ""
 category = "dev"
 optional = false
@@ -100,7 +108,10 @@ python-versions = ">=3.8, <3.10"
 develop = false
 
 [package.dependencies]
+click = "^8.1.3"
 envparse = "^0.2.0"
+nest-asyncio = "^1.5.5"
+pydantic = "^1.9.1"
 pyyaml = "^6.0"
 toml = "^0.10.2"
 
@@ -108,7 +119,7 @@ toml = "^0.10.2"
 type = "git"
 url = "https://github.com/ospark-org/polymoath-core.git"
 reference = "main"
-resolved_reference = "829597dbbaa10e0a705f8ad1c3f02c9bc025d0f2"
+resolved_reference = "880707d9e26c925eec391ae4ce8f83601403f947"
 
 [[package]]
 name = "pydantic"
@@ -224,6 +235,10 @@ h11 = [
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
     {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
+]
+nest-asyncio = [
+    {file = "nest_asyncio-1.5.5-py3-none-any.whl", hash = "sha256:b98e3ec1b246135e4642eceffa5a6c23a3ab12c82ff816a92c612d68205813b2"},
+    {file = "nest_asyncio-1.5.5.tar.gz", hash = "sha256:e442291cd942698be619823a17a86a5759eabe1f8613084790de189fe9e16d65"},
 ]
 polymath-core = []
 pydantic = [

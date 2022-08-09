@@ -1,7 +1,6 @@
-from typing import Callable, Optional, Type, Any
-from fastapi import Depends
-from polymath.descriptor.backend import *
-from fastapi.responses import Response, JSONResponse
+from typing import Callable, Any
+from fastapi.responses import Response
+from polymath.descriptor.backend import BackendDescriptor
 from polymath.server.backend.wrapper import WrapperBackend
 
 class RouteBackendDescriptor(BackendDescriptor):
@@ -30,31 +29,3 @@ class RouteBackendDescriptor(BackendDescriptor):
 
     def middleware(self):
         pass
-
-# class BackendDescriptor:
-#     def __init__(self,
-#                  path: str,
-#                  end_point: Callable,
-#                  backend_class:Optional[Type[WrapperBackend]]=None,
-#                  **kwargs
-#                  ):
-#         self.__path = path
-#         self.__meta_args = kwargs
-#         self.__end_point = end_point
-#         self.__backend_class = backend_class
-#         self.__api_instances = {}
-#
-#     def __get__(self, instance:Service, owner:Type[Service]):
-#         key = id(instance)
-#         end_point = self.__end_point.__get__(instance, owner)
-#         self.__meta_args["end_point"] = end_point
-#         if key not in self.__api_instances.keys():
-#             args = copy(self.__meta_args)
-#             instance_serving_path = instance.serving_path()
-#             if instance_serving_path is not None:
-#                 args["path"] = f"/{clearify(instance.serving_path())}/{clearify(self.__path)}"
-#             else:
-#                 args["path"] = f"/{clearify(self.__path)}"
-#             api = self.__backend_class(**args)
-#             self.__api_instances[key] = api
-#         return self.__api_instances[key]
