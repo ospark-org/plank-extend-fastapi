@@ -123,9 +123,6 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
         self.__response_model = response_model
         self.__description = description
 
-    def routing_path(self) -> str:
-        return self.path
-
     def name(self) -> str:
         return self.__name
 

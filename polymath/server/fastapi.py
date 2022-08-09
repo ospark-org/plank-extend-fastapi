@@ -8,6 +8,7 @@ from polymath.server.base import *
 from polymath.server.backend.fastapi import FastAPIRouteBackend, Routable
 from polymath.support.fastapi.settings import SwaggerSettings
 from polymath.support.fastapi.builtin import BuiltinService
+from polymath.support.fastapi.swagger import SwaggerBackend
 
 class FastAPIServer(Server):
     class Delegate(Server.Delegate):
@@ -86,10 +87,11 @@ class FastAPIServer(Server):
         self.__fastapi.openapi_url = context.reword(self.__swagger_settings.openapi_url)
         self.__fastapi.setup()
 
-        builtin_apis_service = BuiltinService(name="builtin", app=self.application, swagger_setting=self.swagger_settings)
+        builtin_apis_service = BuiltinService(name="builtin", app=self.application)
         self.add_backends(builtin_apis_service.version)
         if self.__include_swagger:
-            self.add_backends(builtin_apis_service.swagger)
+            backend = SwaggerBackend(settings=self.swagger_settings)
+            self.add_backends(backend)
 
 
     async def __call__(self, scope, receive, send):
