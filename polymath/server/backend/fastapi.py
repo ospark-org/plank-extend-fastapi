@@ -3,7 +3,7 @@ import inspect
 from typing import List, Optional, Type, Callable
 from fastapi.routing import APIRoute
 from fastapi import Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import Response
 from pydantic import BaseModel
 from polymath.server.backend.serving import ServingBackend
 from polymath.server.backend.wrapper import WrapperBackend
@@ -36,10 +36,10 @@ class Routable:
         raise NotImplementedError
 
     def get_route(self, end_point:Callable, path_prefix: Optional[str]=None)->APIRoute:
-        path = f"/{clearify(self.routing_path())}"
+        clearified_path = clearify(self.routing_path())
         if path_prefix is not None:
             path_prefix = clearify(path_prefix)
-            path = f"/{path_prefix}" + path
+            path = f"/{path_prefix}/{clearified_path}"
 
         name = self.name() or \
                getattr(end_point, "__name__") if hasattr(end_point, "__name__") else path.split("/")[-1]
@@ -77,7 +77,7 @@ class FastAPIRouteBackend(ServingBackend, Routable):
         self.__description = description
 
     def routing_path(self) -> str:
-        return self.path()
+        return self.path
 
     def name(self)->str:
         return self.__name
@@ -124,7 +124,7 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
         self.__description = description
 
     def routing_path(self) -> str:
-        return self.path()
+        return self.path
 
     def name(self) -> str:
         return self.__name
@@ -149,7 +149,9 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
                 if isinstance(sig.return_annotation, str):
                     response_model = end_point.__globals__.get(sig.return_annotation)
                 else:
-                    response_model = sig.return_annotation
+                    if not isinstance(sig.return_annotation, Response):
+                        response_model = sig.return_annotation
+
         else:
             response_model = self.__response_model
         return response_model

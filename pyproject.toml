@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "polymath-server-http"
-version = "0.1.0.dev165"
+version = "0.1.0.dev195"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Grady Zhuo <gradyzhuo@gmail.com>"]
 
 packages = [
     { include = "polymath" }
