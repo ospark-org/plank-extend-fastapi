@@ -14,7 +14,7 @@ fastapi = "^0.78.0"
 uvicorn = "^0.17.6"
 
 [tool.poetry.dev-dependencies]
-polymath-core = {git = "https://github.com/ospark-org/polymoath-core.git", rev = "main"}
+polymath-core = {git = "https://github.com/ospark-org/polymoath.git", rev = "main"}
 
 
 [build-system]
