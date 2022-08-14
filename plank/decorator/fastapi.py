@@ -1,9 +1,9 @@
 from typing import Callable, Optional, List, Type
 from pydantic import BaseModel
-from polymath.decorator.backend import backend
-from polymath.descriptor.fastapi import RouteBackendDescriptor
+from plank.decorator.backend import backend
+from plank.descriptor.fastapi import RouteBackendDescriptor
 
-from polymath.server.backend.fastapi import RoutableWrapperBackend
+from plank.server.backend.fastapi import RoutableWrapperBackend
 
 def routable(path: str,
             name: Optional[str] = None,

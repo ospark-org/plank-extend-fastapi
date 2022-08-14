@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
-from polymath.serving.service import Service
-from polymath.app import Application
-from polymath.decorator.fastapi import routable
+from plank.serving.service import Service
+from plank.app import Application
+from plank.decorator.fastapi import routable
 
 
 class VersionResponse(BaseModel):

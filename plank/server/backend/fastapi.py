@@ -5,12 +5,12 @@ from fastapi.routing import APIRoute
 from fastapi import Depends
 from fastapi.responses import Response
 from pydantic import BaseModel
-from polymath.server.backend.serving import ServingBackend
-from polymath.server.backend.wrapper import WrapperBackend
-from polymath.descriptor.fastapi import RouteBackendDescriptor
-from polymath.serving import Serving
-from polymath.utils.path import clearify
-from polymath.app.context import Context
+from plank.server.backend.serving import ServingBackend
+from plank.server.backend.wrapper import WrapperBackend
+from plank.descriptor.fastapi import RouteBackendDescriptor
+from plank.serving import Serving
+from plank.utils.path import clearify
+from plank.app.context import Context
 
 
 class Routable:

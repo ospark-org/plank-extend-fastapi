@@ -2,13 +2,13 @@ from __future__ import annotations
 from fastapi import FastAPI
 from typing import Optional, NoReturn
 from pathlib import Path
-from polymath.app import Application
-from polymath.app.context import Context
-from polymath.server.base import *
-from polymath.server.backend.fastapi import FastAPIRouteBackend, Routable
-from polymath.support.fastapi.settings import SwaggerSettings
-from polymath.support.fastapi.builtin import BuiltinService
-from polymath.support.fastapi.swagger import SwaggerBackend
+from plank.app import Application
+from plank.app.context import Context
+from plank.server.base import *
+from plank.server.backend.fastapi import FastAPIRouteBackend, Routable
+from plank.support.fastapi.settings import SwaggerSettings
+from plank.support.fastapi.builtin import BuiltinService
+from plank.support.fastapi.swagger import SwaggerBackend
 
 class FastAPIServer(Server):
     class Delegate(Server.Delegate):
@@ -68,6 +68,7 @@ class FastAPIServer(Server):
                 if isinstance(backend, Routable):
                     routing_backend:Routable = backend
                     route = routing_backend.route(path_prefix=self.path_prefix)
+                    print("route.path:", route.path, "route:", route)
                     self.__fastapi.routes.append(route)
 
         def shutdown():

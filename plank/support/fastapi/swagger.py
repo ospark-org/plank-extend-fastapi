@@ -1,10 +1,10 @@
 import secrets
-from polymath.server.backend.fastapi import *
-from polymath.server.backend import Backend
-from polymath.support.fastapi.settings import SwaggerSettings
+from plank.server.backend.fastapi import *
+from plank.server.backend import Backend
+from plank.support.fastapi.settings import SwaggerSettings
 from fastapi import Depends, HTTPException
 from fastapi.openapi.docs import get_swagger_ui_html
-from polymath.app.context import Context
+from plank.app.context import Context
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 

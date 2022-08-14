@@ -1,7 +1,7 @@
 from typing import Callable, Any
 from fastapi.responses import Response
-from polymath.descriptor.backend import BackendDescriptor
-from polymath.server.backend.wrapper import WrapperBackend
+from plank.descriptor.backend import BackendDescriptor
+from plank.server.backend.wrapper import WrapperBackend
 
 class RouteBackendDescriptor(BackendDescriptor):
 
@@ -21,7 +21,7 @@ class RouteBackendDescriptor(BackendDescriptor):
 
 
     def make_backend(self, path: str, end_point: Callable, **kwargs)->WrapperBackend:
-        from polymath.server.backend.fastapi import RoutableWrapperBackend
+        from plank.server.backend.fastapi import RoutableWrapperBackend
         return RoutableWrapperBackend(path=path, end_point=end_point, descriptor=self, **kwargs)
 
     def response(self, unbound_func: Callable[[Any], Response]):
