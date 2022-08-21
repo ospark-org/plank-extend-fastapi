@@ -1,9 +1,9 @@
 from __future__ import annotations
 import inspect
-from typing import List, Optional, Type, Callable
+from typing import List, Optional, Type, Callable, Dict, Any
 from fastapi.routing import APIRoute
 from fastapi import Depends
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
 from pydantic import BaseModel
 from plank.server.backend.serving import ServingBackend
 from plank.server.backend.wrapper import WrapperBackend
@@ -36,11 +36,11 @@ class Routable:
         raise NotImplementedError
 
     def get_route(self, end_point:Callable, path_prefix: Optional[str]=None)->APIRoute:
-        _path = clearify(self.routing_path())
+        path = clearify(self.routing_path())
         if path_prefix is not None:
             path_prefix = clearify(path_prefix)
-            _path = f"{path_prefix}/{path}"
-        path = f"/{_path}"
+            path = f"{path_prefix}/{path}"
+        path = f"/{path}"
 
         name = self.name() or \
                getattr(end_point, "__name__") if hasattr(end_point, "__name__") else path.split("/")[-1]
@@ -122,6 +122,7 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
         self.__include_in_schema = include_in_schema if include_in_schema is not None else True
         self.__tags = tags
         self.__response_model = response_model
+        self.__response_handler = None
         self.__description = description
 
     def name(self) -> str:
@@ -136,33 +137,43 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
     def description(self) -> Optional[str]:
         return self.__description
 
+    def set_response_handler(self, response_handler: Callable[[Any], Response]):
+        self.__response_handler = response_handler
+
+    def set_response_model(self, response_model: BaseModel):
+        self.__response_model = response_model
+
     def response_model(self) -> Optional[Type[BaseModel]]:
         end_point = self.end_point()
-        if self.__response_model is None:
-            sig = inspect.signature(end_point)
-            if sig.return_annotation == inspect.Signature.empty:
-                response_model = None
-            else:
-                # deal with the return annotation become str by __future__.annotations
-                if isinstance(sig.return_annotation, str):
-                    response_model = end_point.__globals__.get(sig.return_annotation)
-                else:
-                    if not isinstance(sig.return_annotation, Response):
-                        response_model = sig.return_annotation
 
+        if self.__response_model is not None:
+            return self.__response_model
+
+        sig = inspect.signature(end_point)
+        if sig.return_annotation == inspect.Signature.empty:
+            response_model = None
         else:
-            response_model = self.__response_model
+            # deal with the return annotation become str by __future__.annotations
+            if isinstance(sig.return_annotation, str):
+                response_model = end_point.__globals__.get(sig.return_annotation)
+            else:
+                if not isinstance(sig.return_annotation, Response):
+                    response_model = sig.return_annotation
+
         return response_model
+
 
     def include_in_schema(self) -> bool:
         return self.__include_in_schema
     
     def route(self, path_prefix: Optional[str]=None) ->APIRoute:
         end_point = self.end_point()
+
         def endpoint(result=Depends(end_point)):
-            if self.descriptor.response_handler is not None:
-                return self.descriptor.response_handler(result)
+            if self.__response_handler is not None:
+                return self.__response_handler(result)
             else:
                 return result
+
         endpoint.__name__ = end_point.__name__
         return self.get_route(end_point=endpoint, path_prefix=path_prefix)
