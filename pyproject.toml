@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "plank-extend-fastapi"
-version = "0.1.0.dev208"
+version = "0.1.0.dev237"
 description = ""
 authors = ["Grady Zhuo <gradyzhuo@gmail.com>"]
 
@@ -12,6 +12,7 @@ packages = [
 python = ">=3.8, <3.10"
 fastapi = "^0.78.0"
 uvicorn = "^0.17.6"
+pydantic = "^1.9.2"
 
 [tool.poetry.dev-dependencies]
 plank = {git = "https://github.com/ospark-org/plank.git", rev = "main"}
