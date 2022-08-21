@@ -1,8 +1,7 @@
 from __future__ import annotations
 from fastapi import FastAPI
-from typing import Optional, NoReturn
-from pathlib import Path
-from plank.app import Application
+from typing import NoReturn
+from plank import logger
 from plank.app.context import Context
 from plank.server.base import *
 from plank.server.backend.fastapi import FastAPIRouteBackend, Routable
@@ -68,7 +67,7 @@ class FastAPIServer(Server):
                 if isinstance(backend, Routable):
                     routing_backend:Routable = backend
                     route = routing_backend.route(path_prefix=self.path_prefix)
-                    print("route.path:", route.path, "route:", route)
+                    logger.debug(f"Added route: {route} at path: {route.path}")
                     self.__fastapi.routes.append(route)
 
         def shutdown():
