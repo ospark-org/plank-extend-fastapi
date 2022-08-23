@@ -1,5 +1,6 @@
 from __future__ import annotations
 import inspect
+import asyncio
 from typing import List, Optional, Type, Callable, Dict, Any
 from fastapi.routing import APIRoute
 from fastapi import Depends
@@ -11,6 +12,7 @@ from plank.descriptor.fastapi import RouteBackendDescriptor
 from plank.serving import Serving
 from plank.utils.path import clearify
 from plank.app.context import Context
+from functools import wraps
 
 
 class Routable:
@@ -121,9 +123,10 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
         self.__methods = methods
         self.__include_in_schema = include_in_schema if include_in_schema is not None else True
         self.__tags = tags
+        self.__description = description
         self.__response_model = response_model
         self.__response_handler = None
-        self.__description = description
+        self.__exception_catcher = None
 
     def name(self) -> str:
         return self.__name
@@ -136,6 +139,9 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
 
     def description(self) -> Optional[str]:
         return self.__description
+
+    def set_exception_catcher(self, exception_catcher: Callable[[Exception], Response]):
+        self.__exception_catcher = exception_catcher
 
     def set_response_handler(self, response_handler: Callable[[Any], Response]):
         self.__response_handler = response_handler
@@ -168,12 +174,36 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
     
     def route(self, path_prefix: Optional[str]=None) ->APIRoute:
         end_point = self.end_point()
+        @wraps(end_point)
+        async def endpoint(*args, **kwargs):
+            try:
+                result = end_point(*args, **kwargs)
 
-        def endpoint(result=Depends(end_point)):
-            if self.__response_handler is not None:
-                return self.__response_handler(result)
-            else:
-                return result
+                if inspect.isawaitable(result):
+                    result = await result
+                if self.__response_handler is not None:
+                    end_point_sig = inspect.signature(end_point)
+                    end_point_request_args = end_point_sig.bind(*args, **kwargs)
 
-        endpoint.__name__ = end_point.__name__
+                    response_handler_sig = inspect.signature(self.__response_handler)
+                    if len(response_handler_sig.parameters) > 1:
+                        handled_result = self.__response_handler(result, **end_point_request_args.arguments)
+                    elif len(response_handler_sig.parameters) > 0:
+                        handled_result = self.__response_handler(result)
+                    else:
+                        handled_result = self.__response_handler()
+
+                    if inspect.isawaitable(handled_result):
+                        return await handled_result
+                    else:
+                        return handled_result
+                else:
+                    return result
+
+            except Exception as error:
+                if self.__exception_catcher is not None:
+                    return self.__exception_catcher(error)
+                else:
+                    raise error
+
         return self.get_route(end_point=endpoint, path_prefix=path_prefix)
