@@ -20,6 +20,7 @@ class RouteBackendDescriptor(BackendDescriptor):
     def make_backend(self, path: str, end_point: Callable, **kwargs)->WrapperBackend:
         backend = RoutableWrapperBackend(path=path, end_point=end_point, descriptor=self, **kwargs)
         backend.set_response_model(self.__response_model)
+        return backend
 
     def __get__(self, instance, owner):
         backend: RoutableWrapperBackend = super().__get__(instance, owner)
