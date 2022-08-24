@@ -104,6 +104,36 @@ class FastAPIRouteBackend(ServingBackend, Routable):
         return self.get_route(end_point=self.serving.perform, path_prefix=path_prefix)
 
 
+async def endpoint(*args, **kwargs):
+    try:
+        result = end_point(*args, **kwargs)
+
+        if inspect.isawaitable(result):
+            result = await result
+        if self.__response_handler is not None:
+            end_point_sig = inspect.signature(end_point)
+            end_point_request_args = end_point_sig.bind(*args, **kwargs)
+
+            response_handler_sig = inspect.signature(self.__response_handler)
+            if len(response_handler_sig.parameters) > 1:
+                handled_result = self.__response_handler(result, **end_point_request_args.arguments)
+            elif len(response_handler_sig.parameters) > 0:
+                handled_result = self.__response_handler(result)
+            else:
+                handled_result = self.__response_handler()
+
+            if inspect.isawaitable(handled_result):
+                return await handled_result
+            else:
+                return handled_result
+        else:
+            return result
+
+    except Exception as error:
+        if self.__exception_catcher is not None:
+            return self.__exception_catcher(error)
+        else:
+            raise error
 
 class RoutableWrapperBackend(WrapperBackend, Routable):
     def __init__(
@@ -174,15 +204,22 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
     
     def route(self, path_prefix: Optional[str]=None) ->APIRoute:
         end_point = self.end_point()
+        end_point_sig = inspect.signature(end_point)
+
+        #resolve the annotation is str and can't catch in endpoint.__global__
+        globals().update( {
+            parameter.annotation: end_point.__globals__[parameter.annotation]
+            for parameter in end_point_sig.parameters.values()
+            if isinstance(parameter.annotation, str) and parameter.annotation in end_point.__globals__
+        } )
         @wraps(end_point)
-        async def endpoint(*args, **kwargs):
+        async def wrapped_end_point(*args, **kwargs):
             try:
                 result = end_point(*args, **kwargs)
-
                 if inspect.isawaitable(result):
                     result = await result
                 if self.__response_handler is not None:
-                    end_point_sig = inspect.signature(end_point)
+
                     end_point_request_args = end_point_sig.bind(*args, **kwargs)
 
                     response_handler_sig = inspect.signature(self.__response_handler)
@@ -206,4 +243,4 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
                 else:
                     raise error
 
-        return self.get_route(end_point=endpoint, path_prefix=path_prefix)
+        return self.get_route(end_point=wrapped_end_point, path_prefix=path_prefix)
