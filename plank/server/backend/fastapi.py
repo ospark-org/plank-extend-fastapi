@@ -1,19 +1,20 @@
 from __future__ import annotations
 import inspect
 import asyncio
-from typing import List, Optional, Type, Callable, Dict, Any
+from typing import List, Optional, Type, Callable, Dict, Any, TYPE_CHECKING
 from fastapi.routing import APIRoute
 from fastapi import Depends
 from fastapi.responses import Response, JSONResponse
 from pydantic import BaseModel
 from plank.server.backend.serving import ServingBackend
 from plank.server.backend.wrapper import WrapperBackend
-from plank.descriptor.fastapi import RouteBackendDescriptor
 from plank.serving import Serving
 from plank.utils.path import clearify
 from plank.app.context import Context
 from functools import wraps
 
+if TYPE_CHECKING:
+    from plank.descriptor.fastapi import RouteBackendDescriptor
 
 class Routable:
     def name(self)->str:
@@ -156,7 +157,7 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
         self.__description = description
         self.__response_model = response_model
         self.__response_handler = None
-        self.__exception_catcher = None
+        self.__exception_catchers = {}
 
     def name(self) -> str:
         return self.__name
@@ -170,8 +171,8 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
     def description(self) -> Optional[str]:
         return self.__description
 
-    def set_exception_catcher(self, exception_catcher: Callable[[Exception], Response]):
-        self.__exception_catcher = exception_catcher
+    def set_exception_catcher(self, exception_catcher: Callable[[Exception], Response], exception_type: Type[Exception]):
+        self.__exception_catchers[exception_type] = exception_catcher
 
     def set_response_handler(self, response_handler: Callable[[Any], Response]):
         self.__response_handler = response_handler
@@ -238,9 +239,11 @@ class RoutableWrapperBackend(WrapperBackend, Routable):
                     return result
 
             except Exception as error:
-                if self.__exception_catcher is not None:
-                    return self.__exception_catcher(error)
-                else:
+                exception_type = type(error)
+                catcher = self.__exception_catchers.get(exception_type) or self.__exception_catchers.get(Exception)
+                if catcher is None:
                     raise error
+                else:
+                    return catcher(error)
 
         return self.get_route(end_point=wrapped_end_point, path_prefix=path_prefix)
