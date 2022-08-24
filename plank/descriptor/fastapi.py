@@ -18,12 +18,12 @@ class RouteBackendDescriptor(BackendDescriptor):
         self.__unbound_exception_catchers = {}
 
     def make_backend(self, path: str, end_point: Callable, **kwargs)->WrapperBackend:
-        return RoutableWrapperBackend(path=path, end_point=end_point, descriptor=self, **kwargs)
+        backend = RoutableWrapperBackend(path=path, end_point=end_point, descriptor=self, **kwargs)
+        backend.set_response_model(self.__response_model)
 
     def __get__(self, instance, owner):
         backend: RoutableWrapperBackend = super().__get__(instance, owner)
-        print("self.__response_model:", self.__response_model)
-        backend.set_response_model(self.__response_model)
+
         if self.__unbound_response_handler is not None:
             backend.set_response_handler(self.__unbound_response_handler.__get__(instance, owner))
         if len(self.__unbound_exception_catchers) > 0:
