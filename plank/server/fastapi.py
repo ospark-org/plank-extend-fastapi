@@ -4,7 +4,7 @@ from typing import NoReturn
 from plank import logger
 from plank.app.context import Context
 from plank.server.base import *
-from plank.server.backend.fastapi import FastAPIRouteBackend, Routable
+from plank.server.action.fastapi import FastAPIRouteAction, Routable
 from plank.support.fastapi.settings import SwaggerSettings
 from plank.support.fastapi.builtin import BuiltinService
 from plank.support.fastapi.swagger import SwaggerBackend
@@ -21,7 +21,7 @@ class FastAPIServer(Server):
 
     @property
     def build_version(self)->str:
-        return self.__build_version
+        return self.application.build_version
 
     @property
     def path_prefix(self) -> str:
@@ -63,10 +63,10 @@ class FastAPIServer(Server):
         def startup():
             self.did_startup()
 
-            for path, backend in self.backends.items():
-                if isinstance(backend, Routable):
-                    routing_backend:Routable = backend
-                    route = routing_backend.route(path_prefix=self.path_prefix)
+            for path, action in self.backends.items():
+                if isinstance(action, Routable):
+                    routing_action:Routable = action
+                    route = routing_action.route(path_prefix=self.path_prefix)
                     logger.debug(f"Added route: {route} at path: {route.path}")
                     self.__fastapi.routes.append(route)
 
