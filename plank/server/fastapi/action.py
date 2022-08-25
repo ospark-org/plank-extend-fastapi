@@ -62,7 +62,6 @@ class RoutableWrapperAction(WrapperAction, Routable):
             self,
             path: str,
             end_point: Callable,
-            descriptor: RouteBackendDescriptor,
             name: Optional[str] = None,
             methods: Optional[List[str]] = None,
             tags: Optional[List[str]] = None,
@@ -70,7 +69,7 @@ class RoutableWrapperAction(WrapperAction, Routable):
             description: Optional[str] = None,
             include_in_schema: Optional[bool] = None
     ):
-        super().__init__(path=path, end_point=end_point, descriptor=descriptor)
+        super().__init__(path=path, end_point=end_point)
         self.__name = name
         self.__methods = methods
         self.__include_in_schema = include_in_schema if include_in_schema is not None else True

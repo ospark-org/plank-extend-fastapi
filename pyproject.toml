@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "plank-extend-fastapi"
-version = "0.1.0.dev307"
+version = "0.1.0.dev308"
 description = ""
 authors = ["Grady Zhuo <gradyzhuo@gmail.com>"]
 
