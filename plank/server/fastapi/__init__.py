@@ -1,6 +1,6 @@
 from __future__ import annotations
 from fastapi import FastAPI
-from typing import NoReturn
+from typing import NoReturn, Optional, TYPE_CHECKING
 from plank import logger
 from plank.app.context import Context
 from plank.server import Server
@@ -9,6 +9,9 @@ from plank.support.fastapi.builtin import BuiltinService
 from plank.support.fastapi.swagger import SwaggerAction
 from .interface import Routable
 from .action import FastAPIRouteAction
+
+if TYPE_CHECKING:
+    from plank.app import Application
 
 class FastAPIServer(Server):
     class Delegate(Server.Delegate):
@@ -64,7 +67,7 @@ class FastAPIServer(Server):
         def startup():
             self.did_startup()
 
-            for path, action in self.backends.items():
+            for path, action in self.actions.items():
                 if isinstance(action, Routable):
                     routing_action:Routable = action
                     route = routing_action.route(path_prefix=self.path_prefix)
