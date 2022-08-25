@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, Any, Type, Optional
+from typing import Callable, Any, Type
 from pydantic import BaseModel
 from fastapi.responses import Response
 from plank.serving.service import Service
@@ -18,7 +18,7 @@ class RouteActionDescriptor(ActionDescriptor):
         self.__unbound_response_handler = None
         self.__unbound_exception_catchers = {}
 
-    def make_action(self, instance:Service, owner:Type[Service]) ->Action:
+    def make_action(self, instance:Service, owner:Type[Service]) -> Action:
         end_point = self.end_point(instance=instance, owner=owner)
         path = self.serving_path(instance=instance, owner=owner)
 
@@ -53,11 +53,3 @@ class RouteActionDescriptor(ActionDescriptor):
                 self.__unbound_exception_catchers[exception_type] = unbound_method
             return self
         return wrapper
-
-
-
-
-        # return ExceptionCatcherDescriptor(
-        #     route_backend_descriptor=self,
-        #     unbound_exception_catcher=unbound_method
-        # )
