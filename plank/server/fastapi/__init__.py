@@ -7,7 +7,6 @@ from plank.server import Server
 from plank.support.fastapi.settings import SwaggerSettings
 from plank.support.fastapi.builtin import BuiltinService
 from plank.support.fastapi.swagger import SwaggerBackend
-
 from .interface import Routable
 from .action import FastAPIRouteAction
 

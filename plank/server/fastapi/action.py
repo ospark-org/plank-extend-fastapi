@@ -2,8 +2,8 @@ from __future__ import annotations
 import inspect
 from functools import wraps
 from typing import List, Optional, Type, Callable, Any, TYPE_CHECKING
-from plank.server.fastapi.action import APIRoute
-from plank.server.fastapi.action import Response
+from fastapi.routing import APIRoute
+from fastapi.responses import Response
 from pydantic import BaseModel
 from plank.server.action.serving import ServingAction
 from plank.server.action.wrapper import WrapperAction
