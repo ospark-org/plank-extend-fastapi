@@ -2,11 +2,12 @@ from __future__ import annotations
 from typing import Callable, Any, Type, Optional
 from pydantic import BaseModel
 from fastapi.responses import Response
-from plank.descriptor.backend import BackendDescriptor
-from plank.server.backend.wrapper import WrapperBackend
-from plank.server.backend.fastapi import RoutableWrapperBackend
+from plank.serving.service import Service
+from plank.descriptor.action import ActionDescriptor, Action
+from plank.server.action.wrapper import WrapperAction
+from plank.server.action.fastapi import RoutableWrapperAction
 
-class RouteBackendDescriptor(BackendDescriptor):
+class RouteActionDescriptor(ActionDescriptor):
 
     def __init__(self,
                  path: str,
@@ -17,29 +18,31 @@ class RouteBackendDescriptor(BackendDescriptor):
         self.__unbound_response_handler = None
         self.__unbound_exception_catchers = {}
 
-    def make_backend(self, path: str, end_point: Callable, **kwargs)->WrapperBackend:
-        backend = RoutableWrapperBackend(path=path, end_point=end_point, descriptor=self, **kwargs)
-        backend.set_response_model(self.__response_model)
-        return backend
+    def make_action(self, instance:Service, owner:Type[Service]) ->Action:
+        end_point = self.end_point(instance=instance, owner=owner)
+        path = self.serving_path(instance=instance, owner=owner)
 
-    def __get__(self, instance, owner):
-        backend: RoutableWrapperBackend = super().__get__(instance, owner)
+        #prepare args of RoutableWrapperAction.
+        extra_args = self.action_extra_args()
+        extra_args["response_model"] = self.__response_model or extra_args.get("response_model")
+        extra_args["tags"] += [instance.name()]
 
+        action = RoutableWrapperAction(path=path, end_point=end_point, **extra_args)
         if self.__unbound_response_handler is not None:
-            backend.set_response_handler(self.__unbound_response_handler.__get__(instance, owner))
+            action.set_response_handler(self.__unbound_response_handler.__get__(instance, owner))
         if len(self.__unbound_exception_catchers) > 0:
             for exception_type, unbound_exception_catcher in self.__unbound_exception_catchers.items():
-                backend.set_exception_catcher(unbound_exception_catcher.__get__(instance, owner), exception_type=exception_type)
-        return backend
+                action.set_exception_catcher(unbound_exception_catcher.__get__(instance, owner), exception_type=exception_type)
+        return action
 
-    def response(self, response_model: Type[BaseModel])->Callable[[Callable[[Any], Response]], RouteBackendDescriptor]:
+    def response(self, response_model: Type[BaseModel])->Callable[[Callable[[Any], Response]], RouteActionDescriptor]:
         self.__response_model = response_model
         def wrapper(unbound_method: Callable[[Any], Response]):
             self.__unbound_response_handler = unbound_method
             return self
         return wrapper
 
-    def catch(self, *exception_types: Type[Exception])->Callable[[Callable[[Exception], Response]], RouteBackendDescriptor]:
+    def catch(self, *exception_types: Type[Exception])->Callable[[Callable[[Exception], Response]], RouteActionDescriptor]:
         if len(exception_types) == 0:
             exception_types += [Exception]
         def wrapper(unbound_method: Callable[[Exception], Response]):

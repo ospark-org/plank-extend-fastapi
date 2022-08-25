@@ -6,8 +6,8 @@ from fastapi.routing import APIRoute
 from fastapi import Depends
 from fastapi.responses import Response, JSONResponse
 from pydantic import BaseModel
-from plank.server.backend.serving import ServingBackend
-from plank.server.backend.wrapper import WrapperBackend
+from plank.server.action.serving import ServingAction
+from plank.server.action.wrapper import WrapperAction
 from plank.serving import Serving
 from plank.utils.path import clearify
 from plank.app.context import Context
@@ -59,8 +59,7 @@ class Routable:
         raise NotImplementedError()
 
 
-
-class FastAPIRouteBackend(ServingBackend, Routable):
+class FastAPIRouteAction(ServingAction, Routable):
     def __init__(
             self,
             name: str,
@@ -105,38 +104,7 @@ class FastAPIRouteBackend(ServingBackend, Routable):
         return self.get_route(end_point=self.serving.perform, path_prefix=path_prefix)
 
 
-async def endpoint(*args, **kwargs):
-    try:
-        result = end_point(*args, **kwargs)
-
-        if inspect.isawaitable(result):
-            result = await result
-        if self.__response_handler is not None:
-            end_point_sig = inspect.signature(end_point)
-            end_point_request_args = end_point_sig.bind(*args, **kwargs)
-
-            response_handler_sig = inspect.signature(self.__response_handler)
-            if len(response_handler_sig.parameters) > 1:
-                handled_result = self.__response_handler(result, **end_point_request_args.arguments)
-            elif len(response_handler_sig.parameters) > 0:
-                handled_result = self.__response_handler(result)
-            else:
-                handled_result = self.__response_handler()
-
-            if inspect.isawaitable(handled_result):
-                return await handled_result
-            else:
-                return handled_result
-        else:
-            return result
-
-    except Exception as error:
-        if self.__exception_catcher is not None:
-            return self.__exception_catcher(error)
-        else:
-            raise error
-
-class RoutableWrapperBackend(WrapperBackend, Routable):
+class RoutableWrapperAction(WrapperAction, Routable):
     def __init__(
             self,
             path: str,

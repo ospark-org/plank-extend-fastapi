@@ -1,7 +1,7 @@
 from typing import Callable, Optional, List, Type
 from pydantic import BaseModel
-from plank.decorator.backend import backend
-from plank.descriptor.fastapi import RouteBackendDescriptor
+from plank.decorator.action import action
+from plank.descriptor.fastapi import RouteActionDescriptor
 
 def routable(path: str,
             name: Optional[str] = None,
@@ -9,8 +9,8 @@ def routable(path: str,
             tags: Optional[List[str]] = None,
             response_model: Optional[Type[BaseModel]] = None,
             description: Optional[str] = None,
-            include_in_schema: Optional[bool] = None)->Callable[[Callable], RouteBackendDescriptor]:
-    return backend(
+            include_in_schema: Optional[bool] = None)->Callable[[Callable], RouteActionDescriptor]:
+    return action(
         path=path,
         name=name,
         methods=methods,
@@ -18,5 +18,5 @@ def routable(path: str,
         response_model=response_model,
         description=description,
         include_in_schema=include_in_schema,
-        wrapper_descriptor_type=RouteBackendDescriptor
+        wrapper_descriptor_type=RouteActionDescriptor
     )
