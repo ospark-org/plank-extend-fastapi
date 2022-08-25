@@ -3,7 +3,8 @@ from typing import Callable, Any, Type, Optional
 from pydantic import BaseModel
 from fastapi.responses import Response
 from plank.serving.service import Service
-from plank.descriptor.action import ActionDescriptor, Action
+from plank.descriptor.action import ActionDescriptor
+from plank.server.action import Action
 from plank.server.fastapi.action import RoutableWrapperAction
 
 class RouteActionDescriptor(ActionDescriptor):
