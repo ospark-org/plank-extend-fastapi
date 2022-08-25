@@ -6,7 +6,7 @@ from plank.app.context import Context
 from plank.server import Server
 from plank.support.fastapi.settings import SwaggerSettings
 from plank.support.fastapi.builtin import BuiltinService
-from plank.support.fastapi.swagger import SwaggerBackend
+from plank.support.fastapi.swagger import SwaggerAction
 from .interface import Routable
 from .action import FastAPIRouteAction
 
@@ -89,10 +89,10 @@ class FastAPIServer(Server):
         self.__fastapi.setup()
 
         builtin_apis_service = BuiltinService(name="builtin", app=self.application)
-        self.add_backends(builtin_apis_service.version)
+        self.add_action(builtin_apis_service.version)
         if self.__include_swagger:
-            backend = SwaggerBackend(settings=self.swagger_settings)
-            self.add_backends(backend)
+            action = SwaggerAction(settings=self.swagger_settings)
+            self.add_action(action)
 
 
     async def __call__(self, scope, receive, send):

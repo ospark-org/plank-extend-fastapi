@@ -24,7 +24,7 @@ def check_current_username(secrets_username: Optional[str]=None, secrets_passwor
     return check
 
 
-class SwaggerBackend(Action, Routable):
+class SwaggerAction(Action, Routable):
     def __init__(self, settings: SwaggerSettings):
         self.__settings = settings
 
