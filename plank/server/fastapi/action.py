@@ -1,63 +1,16 @@
 from __future__ import annotations
 import inspect
-import asyncio
-from typing import List, Optional, Type, Callable, Dict, Any, TYPE_CHECKING
-from fastapi.routing import APIRoute
-from fastapi import Depends
-from fastapi.responses import Response, JSONResponse
+from functools import wraps
+from typing import List, Optional, Type, Callable, Any, TYPE_CHECKING
+from plank.server.fastapi.action import APIRoute
+from plank.server.fastapi.action import Response
 from pydantic import BaseModel
 from plank.server.action.serving import ServingAction
 from plank.server.action.wrapper import WrapperAction
 from plank.serving import Serving
-from plank.utils.path import clearify
-from plank.app.context import Context
-from functools import wraps
-
+from .interface import Routable
 if TYPE_CHECKING:
     from plank.descriptor.fastapi import RouteBackendDescriptor
-
-class Routable:
-    def name(self)->str:
-        raise NotImplementedError
-
-    def routing_path(self) -> str:
-        raise NotImplementedError
-
-    def methods(self)->List[str]:
-        raise NotImplementedError
-
-    def tags(self)->List[str]:
-        raise NotImplementedError
-
-    def description(self)->Optional[str]:
-        raise NotImplementedError
-
-    def response_model(self):
-        raise NotImplementedError
-
-    def include_in_schema(self)->bool:
-        raise NotImplementedError
-
-    def get_route(self, end_point:Callable, path_prefix: Optional[str]=None)->APIRoute:
-        path = clearify(self.routing_path())
-        if path_prefix is not None:
-            path_prefix = clearify(path_prefix)
-            path = f"{path_prefix}/{path}"
-        path = f"/{path}"
-
-        name = self.name() or \
-               getattr(end_point, "__name__") if hasattr(end_point, "__name__") else path.split("/")[-1]
-        methods = self.methods()
-        tags = self.tags()
-        response_model = self.response_model()
-        description = self.description()
-        include_in_schema = self.include_in_schema()
-        return APIRoute(path=path, name=name, endpoint=end_point, methods=methods, tags=tags,
-                        response_model=response_model, description=description, include_in_schema=include_in_schema)
-
-    def route(self, path_prefix: Optional[str] = None) -> APIRoute:
-        raise NotImplementedError()
-
 
 class FastAPIRouteAction(ServingAction, Routable):
     def __init__(
@@ -82,25 +35,25 @@ class FastAPIRouteAction(ServingAction, Routable):
     def routing_path(self) -> str:
         return self.path
 
-    def name(self)->str:
+    def name(self) -> str:
         return self.__name
 
-    def methods(self)->List[str]:
+    def methods(self) -> List[str]:
         return self.__methods
 
-    def tags(self)->List[str]:
+    def tags(self) -> List[str]:
         return self.__tags
 
-    def description(self)->Optional[str]:
+    def description(self) -> Optional[str]:
         return self.__description
 
-    def response_model(self)->Optional[Type[BaseModel]]:
+    def response_model(self) -> Optional[Type[BaseModel]]:
         return self.__response_model
 
-    def include_in_schema(self)->bool:
+    def include_in_schema(self) -> bool:
         return self.__include_in_schema
 
-    def route(self, path_prefix: Optional[str]=None) -> APIRoute:
+    def route(self, path_prefix: Optional[str] = None) -> APIRoute:
         return self.get_route(end_point=self.serving.perform, path_prefix=path_prefix)
 
 
@@ -139,7 +92,8 @@ class RoutableWrapperAction(WrapperAction, Routable):
     def description(self) -> Optional[str]:
         return self.__description
 
-    def set_exception_catcher(self, exception_catcher: Callable[[Exception], Response], exception_type: Type[Exception]):
+    def set_exception_catcher(self, exception_catcher: Callable[[Exception], Response],
+                              exception_type: Type[Exception]):
         self.__exception_catchers[exception_type] = exception_catcher
 
     def set_response_handler(self, response_handler: Callable[[Any], Response]):
@@ -167,20 +121,20 @@ class RoutableWrapperAction(WrapperAction, Routable):
 
         return response_model
 
-
     def include_in_schema(self) -> bool:
         return self.__include_in_schema
-    
-    def route(self, path_prefix: Optional[str]=None) ->APIRoute:
+
+    def route(self, path_prefix: Optional[str] = None) -> APIRoute:
         end_point = self.end_point()
         end_point_sig = inspect.signature(end_point)
 
-        #resolve the annotation is str and can't catch in endpoint.__global__
-        globals().update( {
+        # resolve the annotation is str and can't catch in endpoint.__global__
+        globals().update({
             parameter.annotation: end_point.__globals__[parameter.annotation]
             for parameter in end_point_sig.parameters.values()
             if isinstance(parameter.annotation, str) and parameter.annotation in end_point.__globals__
-        } )
+        })
+
         @wraps(end_point)
         async def wrapped_end_point(*args, **kwargs):
             try:

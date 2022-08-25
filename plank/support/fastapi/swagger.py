@@ -1,8 +1,10 @@
 import secrets
-from plank.server.backend.fastapi import *
-from plank.server.backend import Backend
+from typing import List, Optional
+from plank.server.fastapi.action import Routable
+from plank.server.action import Action
 from plank.support.fastapi.settings import SwaggerSettings
 from fastapi import Depends, HTTPException
+from fastapi.routing import APIRoute
 from fastapi.openapi.docs import get_swagger_ui_html
 from plank.app.context import Context
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -22,7 +24,7 @@ def check_current_username(secrets_username: Optional[str]=None, secrets_passwor
     return check
 
 
-class SwaggerBackend(Backend, Routable):
+class SwaggerBackend(Action, Routable):
     def __init__(self, settings: SwaggerSettings):
         self.__settings = settings
 

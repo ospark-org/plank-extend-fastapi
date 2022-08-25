@@ -4,8 +4,7 @@ from pydantic import BaseModel
 from fastapi.responses import Response
 from plank.serving.service import Service
 from plank.descriptor.action import ActionDescriptor, Action
-from plank.server.action.wrapper import WrapperAction
-from plank.server.action.fastapi import RoutableWrapperAction
+from plank.server.fastapi.action import RoutableWrapperAction
 
 class RouteActionDescriptor(ActionDescriptor):
 

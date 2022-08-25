@@ -100,7 +100,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "plank"
-version = "0.1.0.dev199"
+version = "0.1.0.dev200"
 description = ""
 category = "dev"
 optional = false
@@ -119,7 +119,7 @@ toml = "^0.10.2"
 type = "git"
 url = "https://github.com/ospark-org/plank.git"
 reference = "main"
-resolved_reference = "e6d51becf4c9d4b5e7dfc5a13a927df71b48811a"
+resolved_reference = "2e736c76b850a2cd049327358cbe24bcf3a03095"
 
 [[package]]
 name = "pydantic"

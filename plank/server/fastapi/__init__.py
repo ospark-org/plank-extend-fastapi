@@ -3,11 +3,13 @@ from fastapi import FastAPI
 from typing import NoReturn
 from plank import logger
 from plank.app.context import Context
-from plank.server.base import *
-from plank.server.action.fastapi import FastAPIRouteAction, Routable
+from plank.server import Server
 from plank.support.fastapi.settings import SwaggerSettings
 from plank.support.fastapi.builtin import BuiltinService
 from plank.support.fastapi.swagger import SwaggerBackend
+
+from .interface import Routable
+from .action import FastAPIRouteAction
 
 class FastAPIServer(Server):
     class Delegate(Server.Delegate):
