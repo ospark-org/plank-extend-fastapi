@@ -1,5 +1,5 @@
 import secrets
-from typing import List, Optional
+from typing import List, Optional, Callable
 from plank.server.fastapi.action import Routable
 from plank.server.action import Action
 from plank.support.fastapi.settings import SwaggerSettings
