@@ -28,7 +28,7 @@ class RouteActionDescriptor(ActionDescriptor):
         service_tags = []
         if isinstance(instance, Service) and instance.name() is not None:
             service_tags = [instance.name().title()]
-        extra_args["tags"] = extra_args.get("tags", []) + service_tags
+        extra_args["tags"] = (extra_args.get("tags") or []) + service_tags
 
         action = RoutableWrapperAction(path=path, end_point=end_point, **extra_args)
         if self.__unbound_response_handler is not None:
