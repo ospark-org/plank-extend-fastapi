@@ -3,6 +3,7 @@ name = "plank-extend-fastapi"
 version = "0.1.0"
 description = ""
 authors = ["Grady Zhuo <grady@ospark.org>"]
+license = "Apache License 2.0"
 
 packages = [
     { include = "plank" }
