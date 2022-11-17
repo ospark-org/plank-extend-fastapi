@@ -1,16 +1,21 @@
 from __future__ import annotations
+
 import inspect
 from functools import wraps
 from typing import List, Optional, Type, Callable, Any, TYPE_CHECKING
-from fastapi.routing import APIRoute
+
 from fastapi.responses import Response
-from pydantic import BaseModel
+from fastapi.routing import APIRoute
 from plank.server.action.serving import ServingAction
 from plank.server.action.wrapper import WrapperAction
 from plank.serving import Serving
+from pydantic import BaseModel
+
 from .interface import Routable
+
 if TYPE_CHECKING:
-    from plank.descriptor.fastapi import RouteBackendDescriptor
+    pass
+
 
 class FastAPIRouteAction(ServingAction, Routable):
     def __init__(
@@ -58,6 +63,7 @@ class FastAPIRouteAction(ServingAction, Routable):
 
 
 class RoutableWrapperAction(WrapperAction, Routable):
+
     def __init__(
             self,
             path: str,
@@ -67,10 +73,11 @@ class RoutableWrapperAction(WrapperAction, Routable):
             tags: Optional[List[str]] = None,
             response_model: Optional[Type[BaseModel]] = None,
             description: Optional[str] = None,
-            include_in_schema: Optional[bool] = None
+            include_in_schema: Optional[bool] = None,
+            response_reverser: Optional[Callable] = None
     ):
-        super().__init__(path=path, end_point=end_point)
-        self.__name = name
+        super().__init__(path=path, end_point=end_point, response_reverser=response_reverser)
+        self.__name = name or (end_point.__name__ if hasattr(end_point, "__name__") else None)
         self.__methods = methods
         self.__include_in_schema = include_in_schema if include_in_schema is not None else True
         self.__tags = tags
@@ -78,6 +85,8 @@ class RoutableWrapperAction(WrapperAction, Routable):
         self.__response_model = response_model
         self.__response_handler = None
         self.__exception_catchers = {}
+
+        self.__call__ = wraps(end_point)(lambda *args, **kwargs: end_point(*args, **kwargs))
 
     def name(self) -> str:
         return self.__name
@@ -97,6 +106,12 @@ class RoutableWrapperAction(WrapperAction, Routable):
 
     def set_response_handler(self, response_handler: Callable[[Any], Response]):
         self.__response_handler = response_handler
+
+    def response_handler(self, *args, **kwargs):
+        sig = inspect.signature(self.__response_handler)
+        arguments = sig.bind(*args, **kwargs)
+        arguments.apply_defaults()
+        return self.__response_handler(**arguments.arguments)
 
     def set_response_model(self, response_model: BaseModel):
         self.__response_model = response_model

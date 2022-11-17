@@ -1,66 +1,72 @@
 from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
+
 from fastapi import FastAPI
-from typing import NoReturn, Optional, TYPE_CHECKING
 from plank import logger
-from plank.app.context import Context
+from plank.context import Context
+from plank.configuration import Configuration
 from plank.server import Server
-from plank.support.fastapi.settings import SwaggerSettings
 from plank.support.fastapi.builtin import BuiltinService
+from plank.support.fastapi.settings import SwaggerSettings
 from plank.support.fastapi.swagger import SwaggerAction
-from .interface import Routable
 from .action import FastAPIRouteAction
+from .interface import Routable
 
 if TYPE_CHECKING:
     from plank.app import Application
 
+
 class FastAPIServer(Server):
     class Delegate(Server.Delegate):
         def server_did_startup(self, server: FastAPIServer): pass
+
         def server_did_shutdown(self, server: FastAPIServer): pass
 
     @classmethod
-    def build(cls, name: str, version: str, delegate: FastAPIServer.Delegate, workspace: Path, path_prefix:Optional[str]=None, build_version: Optional[str] = None, configuration_path:Optional[Path]=None, include_swagger: Optional[bool]=None, **fastapi_arguments)->FastAPIServer:
-        return super().build(name=name, version=version, delegate=delegate, build_version=build_version, path_prefix=path_prefix, workspace=workspace, configuration_path=configuration_path, include_swagger=include_swagger, **fastapi_arguments)
-
+    def build(cls, configuration: Configuration, delegate: FastAPIServer.Delegate, path_prefix: Optional[str] = None,
+                     api_version: Optional[str] = None, **fastapi_arguments) -> FastAPIServer:
+        from plank.app import Application
+        app = Application(delegate=delegate, configuration=configuration)
+        api_version = api_version or configuration.app.build_version
+        server = FastAPIServer(application=app, version=api_version, delegate=delegate, path_prefix=path_prefix, **fastapi_arguments)
+        return server
 
     @property
-    def build_version(self)->str:
+    def build_version(self) -> str:
         return self.application.build_version
 
     @property
-    def path_prefix(self) -> str:
-        return self.__path_prefix
-
-    @path_prefix.setter
-    def path_prefix(self, new_value: str) -> NoReturn:
-        self.__path_prefix = new_value
-
-    @property
-    def include_swagger(self)->bool:
+    def include_swagger(self) -> bool:
         return self.__include_swagger
 
     @property
-    def fastapi(self)->FastAPI:
+    def fastapi(self) -> FastAPI:
         return self.__fastapi
 
     @property
-    def swagger_settings(self)->SwaggerSettings:
+    def swagger_settings(self) -> SwaggerSettings:
         return self.__swagger_settings
 
+    @property
+    def api_version(self) -> Optional[str]:
+        return self.__api_version
+
     def __init__(self, application: Application,
-                 path_prefix: Optional[str]=None,
-                 delegate: Optional[FastAPIServer.Delegate]=None,
-                 include_swagger: Optional[bool]=None,
-                **fastapi_arguments):
-        super().__init__(application=application, delegate=delegate)
-        self.__path_prefix = path_prefix
+                 version: Optional[str] = None,
+                 path_prefix: Optional[str] = None,
+                 delegate: Optional[FastAPIServer.Delegate] = None,
+                 include_swagger: Optional[bool] = None,
+                 **fastapi_arguments):
+        super().__init__(application=application, delegate=delegate, path_prefix=path_prefix)
+        self.__api_version = version
         self.__swagger_settings = SwaggerSettings()
         self.__include_swagger = include_swagger if include_swagger is not None else True
 
         self.__fastapi = FastAPI(
             docs_url=None,
             redoc_url=None,
-            version=application.build_version,
+            version=f"{version}-{application.configuration.name}",
             **fastapi_arguments
         )
 
@@ -69,7 +75,7 @@ class FastAPIServer(Server):
 
             for path, action in self.actions.items():
                 if isinstance(action, Routable):
-                    routing_action:Routable = action
+                    routing_action: Routable = action
                     route = routing_action.route(path_prefix=self.path_prefix)
                     logger.debug(f"Added route: {route} at path: {route.path}")
                     self.__fastapi.routes.append(route)
@@ -79,7 +85,6 @@ class FastAPIServer(Server):
 
         self.__fastapi.router.add_event_handler("startup", startup)
         self.__fastapi.router.add_event_handler("shutdown", shutdown)
-
 
     def launch(self, **options):
         super(FastAPIServer, self).launch(**options)
@@ -91,12 +96,11 @@ class FastAPIServer(Server):
         self.__fastapi.openapi_url = context.reword(self.__swagger_settings.openapi_url)
         self.__fastapi.setup()
 
-        builtin_apis_service = BuiltinService(name="builtin", app=self.application)
+        builtin_apis_service = BuiltinService(name=None, app=self.application)
         self.add_action(builtin_apis_service.version)
         if self.__include_swagger:
             action = SwaggerAction(settings=self.swagger_settings)
             self.add_action(action)
-
 
     async def __call__(self, scope, receive, send):
         await self.__fastapi(scope=scope, receive=receive, send=send)

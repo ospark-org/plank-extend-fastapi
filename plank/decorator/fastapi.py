@@ -1,7 +1,10 @@
-from typing import Callable, Optional, List, Type
+from __future__ import annotations
+from typing import Callable, Optional, List, Type, TYPE_CHECKING
 from pydantic import BaseModel
 from plank.decorator.action import action
-from plank.descriptor.fastapi import RouteActionDescriptor
+
+if TYPE_CHECKING:
+    from plank.descriptor.fastapi import RouteActionDescriptor
 
 def routable(path: str,
             name: Optional[str] = None,
@@ -10,6 +13,7 @@ def routable(path: str,
             response_model: Optional[Type[BaseModel]] = None,
             description: Optional[str] = None,
             include_in_schema: Optional[bool] = None)->Callable[[Callable], RouteActionDescriptor]:
+    from plank.descriptor.fastapi import RouteActionDescriptor
     return action(
         path=path,
         name=name,

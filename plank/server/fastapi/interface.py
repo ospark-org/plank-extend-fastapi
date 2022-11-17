@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 from typing import List, Optional, Callable
+
 from fastapi.routing import APIRoute
 from plank.utils.path import clearify
+
 
 class Routable:
     def name(self) -> str:
