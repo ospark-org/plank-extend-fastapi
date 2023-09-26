@@ -1,17 +1,17 @@
 [tool.poetry]
-name = "plank-extend-fastapi"
-version = "0.1.0"
+name = "plank-server-fastapi"
+version = "0.1.1.dev257"
 description = ""
 authors = ["Grady Zhuo <grady@ospark.org>"]
 license = "Apache License 2.0"
 
 packages = [
-    { include = "plank" }
+    { include = "plank_server_fastapi" }
 ]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-plank = "^0.1.0"
+plank = { path = "../plank" }
 fastapi = "^0.78.0"
 uvicorn = "^0.17.6"
 pydantic = "^1.9.2"
